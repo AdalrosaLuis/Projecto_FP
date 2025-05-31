@@ -52,9 +52,30 @@ fun guardarLiquidacoes(fileName: String, liquidacoes: Array<Double>) {
 }
 
 fun lerInvestimentos(fileName: String, investimentos: Array<Array<String>?>): Boolean {
+	val file = File(fileName)
 	
-	return false
+	if (!file.exists())
+		return false
 	
+	try {
+		val linhas = file.readLines()
+		
+		for (linha in linhas) {
+			if (linha.isBlank() || contadorInvestimentos >= MAX_investimentos) continue
+			
+			val dados = linha.split(";")
+			
+			if (dados.size != 6) continue
+			
+			investimentos[contadorInvestimentos] = dados.toTypedArray()
+			contadorInvestimentos++
+		}
+		
+		return true
+	} catch (e: Exception) {
+		println("Erro ao ler o ficheiro: ${e.message}")
+		return false
+	}
 }
 
 fun consultarInvestimentos(
@@ -199,18 +220,12 @@ fun guardarInvestimentos(fileName: String, investimentos: Array<Array<String>?>)
 	}
 }
 
-fun inicializarInvestimentos(investimentos: Array<Array<String>?>) {
-	adicionarInvestimento(investimentos, "NVIDIA", 500.0, 138.01)
-	adicionarInvestimento(investimentos, "BTC", 5000.0, 39801.02)
-	adicionarInvestimento(investimentos, "PETR4", 200.0, 250.0)
-	adicionarInvestimento(investimentos, "ETH", 800.0, 1600.0)
-}
 
 fun main() {
 	
-	inicializarInvestimentos(investimentos)
+	lerInvestimentos(INVESTIMENTOS_FILE, investimentos)
 	
-	var nome: String
+	var nome: String = ""
 	var moeda: String
 	var escolha: Int
 	var nomeInvestimento :String
@@ -222,7 +237,9 @@ fun main() {
 		"#####################\n"
 	)
 	
-	while (true) {
+	var dadosValidos = false
+	
+	while (!dadosValidos) {
 		println("Por favor indique o seu nome:")
 		nome = readln()
 		
@@ -230,7 +247,6 @@ fun main() {
 		moeda = readln()
 		
 		val nomeCompleto = nome.split(" ")
-		
 		
 		if (nomeCompleto.size != 2 || (moeda != "$" && moeda != "€")) {
 			println(
@@ -241,7 +257,7 @@ fun main() {
 			)
 		}
 		else {
-			break
+			dadosValidos = true
 		}
 	}
 	
@@ -269,14 +285,15 @@ fun main() {
 				}
 			while (nomeInvestimento.length < 3)
 			
-			
 			println("Valor investido:")
 				var ValorInvestido = readln().toDouble()
 				
-				println("Valo atual (PU)")
+				println("Valor atual (PU)")
 				 valorPu = readln().toDouble()
 				
 				var mensagem = adicionarInvestimento(investimentos, nomeInvestimento, ValorInvestido,valorPu )
+				
+				guardarInvestimentos(INVESTIMENTOS_FILE, investimentos)
 				
 				println(mensagem)
 			}
