@@ -3,21 +3,13 @@
 import java.io.File
 import java.time.LocalDate
 
-//var ids = emptyArray<Int>()
-//var nome = emptyArray<String>()
-//var data = emptyArray<String>()
-//var valorInvestido = emptyArray<String>()
-//var valorAtual = emptyArray<String>()
-//var quantidade = emptyArray<String>()
-//var rentabilidade = emptyArray<String>()
-
 const val MAX_investimentos=99
 var MAX_colunas=6
 const val CONFIGURACAO_FILE = "configuracoes.txt"
 const val LIQUIDACAO_FILE = "liquidacoes.txt"
 const val INVESTIMENTOS_FILE = "investimentos.txt"
 
-var configuracoes = emptyArray<String>()
+var configuracoes = Array(2) { "" }
 var liquidacoes = emptyArray<Double>()
 var investimentos: Array<Array<String>?> = arrayOfNulls(MAX_investimentos)
 var contadorInvestimentos=0
@@ -35,11 +27,46 @@ fun obterMenu(): String {
 }
 
 fun lerConfiguracoes(fileName: String, configuracoes: Array<String>): Boolean {
-	return false
+	val file = File(fileName)
+	
+	if (!file.exists()) return false
+	
+	try {
+		val linha = file.readText().trim()
+		
+		val valores = linha.split(";")
+		
+		if (valores.size < 2)
+			return false
+			
+		for (i in valores.indices) {
+			if (i < configuracoes.size) {
+				configuracoes[i] = valores[i]
+			}
+		}
+		
+		return true
+	} catch (e: Exception) {
+		println("Erro ao ler configurações: ${e.message}")
+		return false
+	}
 }
 
-fun guardarConfiguracoes(fileName: String, liquidacoes: Array<String>) {
-
+fun guardarConfiguracoes(fileName: String, configuracoes: Array<String>) {
+	val file = File(fileName)
+	
+	try {
+		if (!file.exists()) {
+			file.createNewFile()
+		}
+		
+		val linha = configuracoes.joinToString(";")
+		file.writeText(linha)
+		
+		println("Configurações guardadas com sucesso em '$fileName'.")
+	} catch (e: Exception) {
+		println("Erro ao guardar configurações: ${e.message}")
+	}
 }
 
 fun lerLiquidacoes(fileName: String, liquidacoes: Array<Double>): Boolean {
@@ -226,7 +253,7 @@ fun main() {
 	lerInvestimentos(INVESTIMENTOS_FILE, investimentos)
 	
 	var nome: String = ""
-	var moeda: String
+	var moeda: String = ""
 	var escolha: Int
 	var nomeInvestimento :String
 	var valorPu:Double
@@ -237,31 +264,43 @@ fun main() {
 		"#####################\n"
 	)
 	
-	var dadosValidos = false
+	var dadosConfiguracao = lerConfiguracoes(CONFIGURACAO_FILE, configuracoes)
 	
-	while (!dadosValidos) {
-		println("Por favor indique o seu nome:")
-		nome = readln()
+	if (!dadosConfiguracao){
+		var dadosValidos = false
 		
-		println("Por favor indique a moeda da sua conta(€ ou $):")
-		moeda = readln()
-		
-		val nomeCompleto = nome.split(" ")
-		
-		if (nomeCompleto.size != 2 || (moeda != "$" && moeda != "€")) {
-			println(
-				"Dados invalidos.\n" +
-						"O nome completo deve ser definido por pelomenos " +
-						"um espaço vazio e pelo menos 4 caracteres.\n" +
-						"A moeda deverá ser em $ ou €.\n"
-			)
+		while (!dadosValidos) {
+			println("Por favor indique o seu nome:")
+			nome = readln()
+			
+			println("Por favor indique a moeda da sua conta(€ ou $):")
+			moeda = readln()
+			
+			val nomeCompleto = nome.split(" ")
+			
+			if (nomeCompleto.size != 2 || (moeda != "$" && moeda != "€")) {
+				println(
+					"Dados invalidos.\n" +
+							"O nome completo deve ser definido por pelomenos " +
+							"um espaço vazio e pelo menos 4 caracteres.\n" +
+							"A moeda deverá ser em $ ou €.\n"
+				)
+			}
+			else {
+				dadosValidos = true
+			}
 		}
-		else {
-			dadosValidos = true
-		}
+		
+		configuracoes[0] = nome
+		configuracoes[1] = moeda
+		
+		guardarConfiguracoes(CONFIGURACAO_FILE, configuracoes)
 	}
 	
-	println("Olá $nome\n")
+	val nomeCompleto = configuracoes[0].toString().split(" ")
+//	moeda = configuracoes[1]
+	
+	println("Olá ${nomeCompleto[0]}\n")
 	
 	do {
 		
@@ -302,15 +341,12 @@ fun main() {
 				println("Voce escolheu Editar investimento.\n menu em desenvolvimento")
 				
 			}
-			
 			4 -> {
 				println("Voce escolheu liquidar investimento. \n menu em desenvolvimento")
 			}
-			
 			5 -> {
 				println("Voce escolheu Guardar. \n menu em desenvolvimento")
 			}
-			
 			9 -> {
 				println("Voce escolheu configuracoes. \n menu em desenvolvimento")
 			}
